@@ -1,9 +1,0 @@
-[Unit]
-Description=API gunicorn daemon
-After=network.target
-
-[Service]
-User=ender
-Group=ender
-WorkingDirectory=/srv/http/api/
-ExecStart=/srv/http/api/env/bin/gunicorn --workers 3 --bind unix:/tmp/api.sock api:__hug_wsgi__
