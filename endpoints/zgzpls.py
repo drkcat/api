@@ -6,7 +6,14 @@ from bs4 import BeautifulSoup
 def get_buses(poste:int, source=None):
     def get_buses_from_web(poste):
         url = 'http://www.urbanosdezaragoza.es/frm_esquemaparadatime.php?poste={}'.format(poste)
-        res = requests.get(url)
+        try:
+            res = requests.get(url)
+        except:
+            return {
+                'errors': {
+                    'status': HTTP_400
+                 }
+            }
 
         if res.status_code != 200:
             return None
@@ -53,12 +60,19 @@ def get_buses(poste:int, source=None):
 
 
     def get_buses_from_opendata(poste):
-        url = 'http://www.zaragoza.es/api/recurso/urbanismo-infraestructuras/transporte-urbano/poste/tuzsa-{}.json'.format(poste)
+        url = 'https://www.zaragoza.es/sede/servicio/urbanismo-infraestructuras/transporte-urbano/poste-autobus/tuzsa-{}.json'.format(poste)
         params = {
             'srsname': 'wgs84'
         }
 
-        data = json.loads(requests.get(url, params=params).text)
+        try:
+            data = json.loads(requests.get(url, params=params).text)
+        except:
+            return {
+                'errors': {
+                    'status': HTTP_400
+                 }
+            }
 
         if 'error' in data:
             return None
