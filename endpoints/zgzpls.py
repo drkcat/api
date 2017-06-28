@@ -1,6 +1,7 @@
 import hug, requests, json
 from falcon import HTTP_400
 from bs4 import BeautifulSoup
+import datetime
 
 @hug.get('/bus', output=hug.output_format.pretty_json, examples=["poste=1169&source=web", "poste=167&source=opendata"])
 def get_buses(poste:int, source=None):
@@ -8,10 +9,11 @@ def get_buses(poste:int, source=None):
         url = 'http://www.urbanosdezaragoza.es/frm_esquemaparadatime.php?poste={}'.format(poste)
         try:
             res = requests.get(url)
-        except:
+        except Exception as e:
             return {
                 'errors': {
-                    'status': HTTP_400
+                    'status': HTTP_400,
+                    'exception': str(e),
                  }
             }
 
@@ -26,6 +28,7 @@ def get_buses(poste:int, source=None):
         lines = None
         buses = []
         nodatabuses = []
+        last_update = datetime.datetime.now().isoformat()
 
         for row in table:
             cells = row.findAll('td')
@@ -55,22 +58,27 @@ def get_buses(poste:int, source=None):
             'street': street,
             'lines': lines,
             'buses': buses,
-            'source': 'web'
+            'source': 'web',
+            'last_update': last_update
         }
 
 
     def get_buses_from_opendata(poste):
-        url = 'https://www.zaragoza.es/sede/servicio/urbanismo-infraestructuras/transporte-urbano/poste-autobus/tuzsa-{}.json'.format(poste)
+        url = 'http://www.zaragoza.es/api/recurso/urbanismo-infraestructuras/transporte-urbano/poste/tuzsa-{}.json'.format(poste)
+        # url = 'https://www.zaragoza.es/sede/servicio/urbanismo-infraestructuras/transporte-urbano/poste-autobus/tuzsa-{}.json'.format(poste)
         params = {
             'srsname': 'wgs84'
         }
 
         try:
-            data = json.loads(requests.get(url, params=params).text)
-        except:
+            res = requests.get(url, params = params)
+            data = json.loads(res.text)
+
+        except Exception as e:
             return {
                 'errors': {
-                    'status': HTTP_400
+                    'status': HTTP_400,
+                    'exception': str(e),
                  }
             }
 
@@ -81,6 +89,7 @@ def get_buses(poste:int, source=None):
         lines = data['title'].title().split(street)[-1].strip().replace('Líneas: ','')
         buses = []
         nodatabuses = []
+        last_update = data['lastUpdated']
 
         for destination in data['destinos']:
             try:
@@ -123,7 +132,8 @@ def get_buses(poste:int, source=None):
             'street': street,
             'lines': lines,
             'buses': buses,
-            'source': 'opendata'
+            'source': 'opendata',
+            'last_update': last_update
         }
 
 
