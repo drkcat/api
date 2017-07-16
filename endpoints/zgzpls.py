@@ -3,13 +3,13 @@ from falcon import HTTP_400
 from bs4 import BeautifulSoup
 import datetime
 
-@hug.get('/bus', output=hug.output_format.pretty_json, examples=["poste=1169", "poste=167&source=web"])
-def get_buses(poste:int=None, source=None):
-    def get_buses_from_web(poste):
-        url = 'http://www.urbanosdezaragoza.es/frm_esquemaparadatime.php?poste={}'.format(poste)
+@hug.get('/bus/stations', output=hug.output_format.pretty_json, examples=["number=1169"])
+def get_buses(number:int=None, source=None):
+    def get_buses_from_web(number):
+        url = 'http://www.urbanosdezaragoza.es/frm_esquemaparadatime.php?poste={}'.format(number)
         try:
             res = requests.get(url)
-            backup = json.loads(requests.get('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(poste)).text)
+            backup = json.loads(requests.get('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(number)).text)
         except Exception as e:
             return {
                 'errors': {
@@ -56,19 +56,19 @@ def get_buses(poste:int=None, source=None):
         buses.extend(nodatabuses)
 
         return {
-            'poste': poste,
+            'id': 'tuzsa-' + str(number),
+            'number': number,
             'street': street,
             'lines': lines,
-            'buses': buses,
+            'transports': buses,
             'coordinates': coordinates,
             'source': 'web',
-            'last_update': last_update
+            'lastUpdated': last_update
         }
 
 
-    def get_buses_from_opendata(poste):
-        # url = 'http://www.zaragoza.es/api/recurso/urbanismo-infraestructuras/transporte-urbano/poste/tuzsa-{}.json'.format(poste)
-        url = 'https://www.zaragoza.es/sede/servicio/urbanismo-infraestructuras/transporte-urbano/poste-autobus/tuzsa-{}.json'.format(poste)
+    def get_buses_from_opendata(number):
+        url = 'https://www.zaragoza.es/sede/servicio/urbanismo-infraestructuras/transporte-urbano/poste-autobus/tuzsa-{}.json'.format(number)
         params = {
             'srsname': 'wgs84'
         }
@@ -79,7 +79,7 @@ def get_buses(poste:int=None, source=None):
         try:
             res = requests.get(url, params = params, headers = headers)
             data = json.loads(res.text)
-            backup = json.loads(requests.get('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(poste)).text)
+            backup = json.loads(requests.get('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(number)).text)
 
         except Exception as e:
             return {
@@ -136,18 +136,19 @@ def get_buses(poste:int=None, source=None):
         buses.extend(nodatabuses)
 
         return {
-            'poste': poste,
+            'id': 'tuzsa-' + str(number),
+            'number': number,
             'street': street,
             'lines': lines,
-            'buses': buses,
+            'transports': buses,
             'coordinates': coordinates,
             'source': 'opendata',
-            'last_update': last_update
+            'lastUpdated': last_update
         }
 
-    if poste:
+    if number:
         if source == 'web':
-            buses = get_buses_from_web(poste)
+            buses = get_buses_from_web(number)
             if not buses:
                 return {
                     'errors': {
@@ -156,7 +157,7 @@ def get_buses(poste:int=None, source=None):
                 }
 
         elif source == 'opendata':
-            buses = get_buses_from_opendata(poste)
+            buses = get_buses_from_opendata(number)
             if not buses:
                 return {
                     'errors': {
@@ -165,9 +166,9 @@ def get_buses(poste:int=None, source=None):
                 }
 
         else:
-            buses = get_buses_from_opendata(poste)
+            buses = get_buses_from_opendata(number)
             if not buses:
-                buses = get_buses_from_web(poste)
+                buses = get_buses_from_web(number)
                 if not buses:
                     return {
                         'errors': {
@@ -175,20 +176,20 @@ def get_buses(poste:int=None, source=None):
                         }
                     }
         data = {
-            'transports': buses['buses'],
-            'lastUpdated': buses['last_update'],
+            'transports': buses['transports'],
+            'lastUpdated': buses['lastUpdated'],
         }
         if buses['lines']:
             data['lines'] = buses['lines']
-        requests.patch('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(poste), json = data)
+        requests.patch('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(number), json = data)
         return buses
     else:
         return json.loads(requests.get('https://zgzpls.firebaseio.com/bus/stations.json').text)
     
-@hug.get('/lines', output=hug.output_format.pretty_json, examples=["id=21",])
-def get_bus_line(id = None):
+@hug.get('/bus/lines', output=hug.output_format.pretty_json, examples=["number=21",])
+def get_bus_line(number = None):
     if id:
-        res = requests.get('https://zgzpls.firebaseio.com/bus/lines/tuzsa-{}.json'.format(id))
+        res = requests.get('https://zgzpls.firebaseio.com/bus/lines/tuzsa-{}.json'.format(number))
         data = json.loads(res.text)
         if data != 'null':
             return data
