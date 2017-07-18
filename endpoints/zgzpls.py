@@ -84,8 +84,7 @@ def get_buses(number:int=None, source=None):
             if 'status' in data and data['status'] == 404:
                 return {
                     'errors': {
-                        'status': HTTP_404,
-                        'message': 'Not found',
+                        'status': HTTP_404
                      }
                 }
 
@@ -211,3 +210,89 @@ def get_bus_line(number = None):
             }
     else:
         return json.loads(requests.get('https://zgzpls.firebaseio.com/bus/lines.json').text)
+
+@hug.get('/tram/stations', output=hug.output_format.pretty_json, examples=["number=1169"])
+def get_tram(number:int=None, street=None):
+    if not number and street:
+        stations = json.loads(requests.get('https://zgzpls.firebaseio.com/tram/stations.json').text)
+        found = False
+        for station in stations:
+            if stations[station]['street'].lower() == street.lower():
+                number = stations[station]['number']
+                found = True
+                break
+
+    elif not number and not street:
+        return {
+            'errors': {
+                'status': HTTP_400
+             }
+        }
+
+    url = 'https://www.zaragoza.es/sede/servicio/urbanismo-infraestructuras/transporte-urbano/parada-tranvia/{}.json'.format(number)
+    params = {
+        'srsname': 'wgs84'
+    }
+    headers = {
+        'Accept': 'application/json'
+    }
+
+    try:
+        res = requests.get(url, params = params, headers = headers)
+        data = json.loads(res.text)
+        backup = json.loads(requests.get('https://zgzpls.firebaseio.com/tram/stations/tram-{}.json'.format(number)).text)
+        
+        if 'status' in data and data['status'] == 404:
+            return {
+                'errors': {
+                    'status': HTTP_404
+                 }
+            }
+
+    except Exception as e:
+        return {
+            'errors': {
+                'status': HTTP_400,
+                'exception': str(e),
+             }
+        }
+
+    if 'error' in data or not 'title' in data:
+        return None
+        
+    street = data['title'].title()
+    lines = data['title'].title().split(street)[-1].strip().replace('Líneas: ','')
+    trams = []
+    nodatatrams = []
+    last_update = data['lastUpdated']
+    coordinates = backup['coordinates']
+    
+    for destination in data['destinos']:
+        try:
+            time = destination['minutos']
+            trams.append({
+                'line': destination['linea'],
+                'destination': destination['destino'].rstrip(',').rstrip('.').title(),
+                'time': '{} min.'.format(time)
+            })
+
+        except:
+            time = destination['minutos'].rstrip('.').replace('cin', 'ción')
+            nodatatrams.append({
+                'line': destination['linea'],
+                'destination': destination['destino'].rstrip(',').rstrip('.').title(),
+                'time': '{}'.format(time)
+            })
+
+    trams = sorted(trams, key=lambda bus: int(bus['time'].split()[0]))
+    trams.extend(nodatatrams)
+
+    return {
+        'id': 'tuzsa-' + str(number),
+        'number': number,
+        'street': street,
+        'lines': lines,
+        'transports': trams,
+        'coordinates': coordinates,
+        'lastUpdated': last_update
+    }
