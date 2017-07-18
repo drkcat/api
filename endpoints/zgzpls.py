@@ -221,18 +221,17 @@ def get_tram(number:int=None, street=None):
                 number = stations[station]['number']
                 found = True
                 break
+        if not found:
+            return {
+                'errors': {
+                    'status': HTTP_404
+                 }
+            }
 
     elif not number and not street:
         return {
             'errors': {
                 'status': HTTP_400
-             }
-        }
-
-    if not found:
-        return {
-            'errors': {
-                'status': HTTP_404
              }
         }
 
@@ -268,7 +267,7 @@ def get_tram(number:int=None, street=None):
         return None
         
     street = data['title'].title()
-    lines = data['title'].title().split(street)[-1].strip().replace('Líneas: ','')
+    lines = 'L1'
     trams = []
     nodatatrams = []
     last_update = data['lastUpdated']
@@ -294,7 +293,7 @@ def get_tram(number:int=None, street=None):
     trams = sorted(trams, key=lambda bus: int(bus['time'].split()[0]))
     trams.extend(nodatatrams)
 
-    return {
+    output = {
         'id': 'tuzsa-' + str(number),
         'number': number,
         'street': street,
@@ -303,3 +302,12 @@ def get_tram(number:int=None, street=None):
         'coordinates': coordinates,
         'lastUpdated': last_update
     }
+    data = {
+        'transports': output['transports'],
+        'lastUpdated': output['lastUpdated'],
+    }
+    if output['lines']:
+        data['lines'] = output['lines']
+    requests.patch('https://zgzpls.firebaseio.com/tram/stations/tram-{}.json'.format(number), json = data)
+    
+    return output
