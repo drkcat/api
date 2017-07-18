@@ -229,6 +229,13 @@ def get_tram(number:int=None, street=None):
              }
         }
 
+    if not found:
+        return {
+            'errors': {
+                'status': HTTP_404
+             }
+        }
+
     url = 'https://www.zaragoza.es/sede/servicio/urbanismo-infraestructuras/transporte-urbano/parada-tranvia/{}.json'.format(number)
     params = {
         'srsname': 'wgs84'
