@@ -1,5 +1,5 @@
 import hug, requests, json
-from falcon import HTTP_400
+from falcon import HTTP_400, HTTP_404
 from bs4 import BeautifulSoup
 import datetime
 
@@ -80,6 +80,14 @@ def get_buses(number:int=None, source=None):
             res = requests.get(url, params = params, headers = headers)
             data = json.loads(res.text)
             backup = json.loads(requests.get('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(number)).text)
+            
+            if 'status' in data and data['status'] == 404:
+                return {
+                    'errors': {
+                        'status': HTTP_404,
+                        'message': 'Not found',
+                     }
+                }
 
         except Exception as e:
             return {
@@ -152,7 +160,7 @@ def get_buses(number:int=None, source=None):
             if not buses:
                 return {
                     'errors': {
-                        'status': HTTP_400
+                        'status': HTTP_404
                     }
                 }
 
@@ -161,7 +169,7 @@ def get_buses(number:int=None, source=None):
             if not buses:
                 return {
                     'errors': {
-                        'status': HTTP_400
+                        'status': HTTP_404
                     }
                 }
 
@@ -172,16 +180,18 @@ def get_buses(number:int=None, source=None):
                 if not buses:
                     return {
                         'errors': {
-                            'status': HTTP_400
+                            'status': HTTP_404
                         }
                     }
-        data = {
-            'transports': buses['transports'],
-            'lastUpdated': buses['lastUpdated'],
-        }
-        if buses['lines']:
-            data['lines'] = buses['lines']
-        requests.patch('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(number), json = data)
+
+        if not 'errors' in buses:
+            data = {
+                'transports': buses['transports'],
+                'lastUpdated': buses['lastUpdated'],
+            }
+            if buses['lines']:
+                data['lines'] = buses['lines']
+            requests.patch('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(number), json = data)
         return buses
     else:
         return json.loads(requests.get('https://zgzpls.firebaseio.com/bus/stations.json').text)
