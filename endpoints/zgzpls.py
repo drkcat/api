@@ -217,7 +217,7 @@ def get_tram(number:int=None, street=None):
         stations = json.loads(requests.get('https://zgzpls.firebaseio.com/tram/stations.json').text)
         found = False
         for station in stations:
-            if stations[station]['street'].lower() == street.lower():
+            if stations[station]['street'].replace('ñ', 'n').replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u').lower() == street.replace('ñ', 'n').replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u').lower():
                 number = stations[station]['number']
                 found = True
                 break
@@ -266,7 +266,8 @@ def get_tram(number:int=None, street=None):
     if 'error' in data or not 'title' in data:
         return None
         
-    street = data['title'].title()
+    street = backup['street']
+    # street = data['title'].title()
     lines = 'L1'
     trams = []
     nodatatrams = []
