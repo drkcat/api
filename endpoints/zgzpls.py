@@ -81,12 +81,12 @@ def get_buses(number:int=None, source=None):
             data = json.loads(res.text)
             backup = json.loads(requests.get('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(number)).text)
             
-            if 'status' in data and data['status'] == 404:
-                return {
-                    'errors': {
-                        'status': HTTP_404
-                     }
-                }
+            # if 'status' in data and data['status'] == 404:
+            #     return {
+            #         'errors': {
+            #             'status': HTTP_404
+            #          }
+            #     }
 
         except Exception as e:
             return {
