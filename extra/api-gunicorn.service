@@ -7,3 +7,6 @@ User=ender
 Group=ender
 WorkingDirectory=/home/ender/Projects/api/
 ExecStart=/home/ender/Projects/api/env/bin/gunicorn --workers 3 --bind unix:/tmp/api.sock api:__hug_wsgi__
+
+[Install]
+WantedBy=default.target
