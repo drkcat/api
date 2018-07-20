@@ -190,7 +190,12 @@ def get_buses(number:int=None, source=None):
             }
             if buses['lines']:
                 data['lines'] = buses['lines']
-            requests.patch('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(number), json = data)
+            try:
+                requests.patch('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(number), json = data)
+
+            except Exception:
+                requests.put('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(number), json = data)
+
         return buses
     else:
         return json.loads(requests.get('https://zgzpls.firebaseio.com/bus/stations.json').text)
