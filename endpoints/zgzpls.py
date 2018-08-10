@@ -21,7 +21,7 @@ def get_buses(number:int=None, source=None):
         if res.status_code != 200:
             return None
 
-        soup = BeautifulSoup(res.text, 'lxml')
+        soup = BeautifulSoup(res.text, 'html.parser')
         table = soup.find(attrs={"style": "border:1pt solid #cccccc"}).findAll('tr')
         table.pop(0)
 
@@ -80,7 +80,7 @@ def get_buses(number:int=None, source=None):
             res = requests.get(url, params = params, headers = headers)
             data = json.loads(res.text)
             backup = json.loads(requests.get('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(number)).text)
-            
+
             # if 'status' in data and data['status'] == 404:
             #     return {
             #         'errors': {
@@ -199,7 +199,7 @@ def get_buses(number:int=None, source=None):
         return buses
     else:
         return json.loads(requests.get('https://zgzpls.firebaseio.com/bus/stations.json').text)
-    
+
 @hug.get('/bus/lines', output=hug.output_format.pretty_json, examples=["number=21",])
 def get_bus_line(number = None):
     if id:
@@ -252,7 +252,7 @@ def get_tram(number:int=None, street=None):
         res = requests.get(url, params = params, headers = headers)
         data = json.loads(res.text)
         backup = json.loads(requests.get('https://zgzpls.firebaseio.com/tram/stations/tram-{}.json'.format(number)).text)
-        
+
         if 'status' in data and data['status'] == 404:
             return {
                 'errors': {
@@ -270,7 +270,7 @@ def get_tram(number:int=None, street=None):
 
     if 'error' in data or not 'title' in data:
         return None
-        
+
     street = backup['street']
     # street = data['title'].title()
     lines = 'L1'
@@ -278,7 +278,7 @@ def get_tram(number:int=None, street=None):
     nodatatrams = []
     last_update = data['lastUpdated']
     coordinates = backup['coordinates']
-    
+
     for destination in data['destinos']:
         try:
             time = destination['minutos']
@@ -315,5 +315,5 @@ def get_tram(number:int=None, street=None):
     if output['lines']:
         data['lines'] = output['lines']
     requests.patch('https://zgzpls.firebaseio.com/tram/stations/tram-{}.json'.format(number), json = data)
-    
+
     return output
