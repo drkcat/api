@@ -87,3 +87,14 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# Dependencies of hug installed from source
+certifi*
+chardet*
+falcon*
+hug*
+idna*
+requests*
+six*
+urllib3*
+*mimeparse*
