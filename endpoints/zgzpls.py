@@ -165,7 +165,7 @@ def get_buses(number:int=None, source=None):
                     }
                 }
 
-        elif source == 'opendata':
+        elif source == 'official-api':
             buses = get_buses_from_opendata(number)
             if not buses:
                 return {
