@@ -63,6 +63,7 @@ def get_buses(number:int=None, source=None):
             'transports': buses,
             'coordinates': coordinates,
             'source': 'web',
+            'sourceUrl': url,
             'lastUpdated': last_update
         }
 
@@ -149,7 +150,8 @@ def get_buses(number:int=None, source=None):
             'lines': lines,
             'transports': buses,
             'coordinates': coordinates,
-            'source': 'opendata',
+            'source': 'official-api',
+            'sourceUrl': res.url,
             'lastUpdated': last_update
         }
 

@@ -38,7 +38,7 @@ def get_server(region):
 
 
 def get_summoner(key, region, name):
-    url = 'https://' + region + '.api.pvp.net/api/lol/' + region + '/v1.4/summoner/by-name/' + name
+    url = 'https://' + get_server(region) + '.api.riotgames.com/lol/summoner/v3/summoners/by-name/' + name
     params = {
         'api_key': key
     }
@@ -72,7 +72,7 @@ def get_top_champions(key, region, server, summoner_id, count = 3):
     return send_request(url, params)
 
 def get_stats_ranked(key, region, summoner_id):
-    url = 'https://' + region + '.api.pvp.net//api/lol/' + region + '/v2.5/league/by-summoner/' + summoner_id
+    url = 'https://' + region + '.api.pvp.net/api/lol/v3/league/by-summoner/' + summoner_id
     params = {
         'api_key': key
     }
