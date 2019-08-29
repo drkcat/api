@@ -25,12 +25,20 @@ def get_buses(number:int=None, source=None):
         table = soup.find(attrs={"style": "border:1pt solid #cccccc"}).findAll('tr')
         table.pop(0)
 
-        street = backup['street']
-        lines = backup['lines']
+        if backup:
+            street = backup['street']
+            lines = backup['lines']
+            coordinates = backup['coordinates']
+
+        else:
+            street = None
+            lines = None
+            coordinates = None
+
         buses = []
         nodatabuses = []
         last_update = datetime.datetime.now().isoformat()
-        coordinates = backup['coordinates']
+        
 
         for row in table:
             cells = row.findAll('td')
@@ -97,7 +105,7 @@ def get_buses(number:int=None, source=None):
                  }
             }
 
-        if 'error' in data or not 'title' in data:
+        if not data or 'error' in data or not 'title' in data:
             return None
 
         street = data['title'].split(')')[-1].split('Lí')[0].strip().title()
@@ -105,7 +113,14 @@ def get_buses(number:int=None, source=None):
         buses = []
         nodatabuses = []
         last_update = data['lastUpdated']
-        coordinates = backup['coordinates']
+        if 'geometry' in data and 'coordinates' in data['geometry']:
+            coordinates = data['geometry']['coordinates']
+
+        elif backup:
+            coordinates = backup['coordinates']
+
+        else:
+            coordinates = None
 
         for destination in data['destinos']:
             try:
