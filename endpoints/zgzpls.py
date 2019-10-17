@@ -7,16 +7,23 @@ import datetime
 def get_buses(number:int=None, source=None):
     def get_buses_from_web(number):
         url = 'http://www.urbanosdezaragoza.es/frm_esquemaparadatime.php?poste={}'.format(number)
+
         try:
             res = requests.get(url)
-            backup = json.loads(requests.get('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(number)).text)
+
         except Exception as e:
             return {
                 'errors': {
                     'status': HTTP_400,
-                    'exception': str(e),
+                    'exception': str(e)
                  }
             }
+
+        try:
+            backup = json.loads(requests.get('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(number)).text)
+
+        except:
+            backup = None
 
         if res.status_code != 200:
             return None
@@ -88,14 +95,13 @@ def get_buses(number:int=None, source=None):
         try:
             res = requests.get(url, params = params, headers = headers)
             data = json.loads(res.text)
-            backup = json.loads(requests.get('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(number)).text)
 
-            # if 'status' in data and data['status'] == 404:
-            #     return {
-            #         'errors': {
-            #             'status': HTTP_404
-            #          }
-            #     }
+            if 'status' in data and data['status'] == 404:
+                return {
+                    'errors': {
+                        'status': HTTP_404
+                     }
+                }
 
         except Exception as e:
             return {
@@ -104,6 +110,11 @@ def get_buses(number:int=None, source=None):
                     'exception': str(e),
                  }
             }
+
+        try:
+            backup = json.loads(requests.get('https://zgzpls.firebaseio.com/bus/stations/tuzsa-{}.json'.format(number)).text)
+        except:
+            backup = None
 
         if not data or 'error' in data or not 'title' in data:
             return None
@@ -224,6 +235,7 @@ def get_bus_line(number = None):
         data = json.loads(res.text)
         if data != 'null':
             return data
+
         else:
             return {
                 'errors': {
@@ -243,6 +255,7 @@ def get_tram(number:int=None, street=None):
                 number = stations[station]['number']
                 found = True
                 break
+
         if not found:
             return {
                 'errors': {
@@ -268,7 +281,6 @@ def get_tram(number:int=None, street=None):
     try:
         res = requests.get(url, params = params, headers = headers)
         data = json.loads(res.text)
-        backup = json.loads(requests.get('https://zgzpls.firebaseio.com/tram/stations/tram-{}.json'.format(number)).text)
 
         if 'status' in data and data['status'] == 404:
             return {
@@ -284,6 +296,12 @@ def get_tram(number:int=None, street=None):
                 'exception': str(e),
              }
         }
+
+    try:
+        backup = json.loads(requests.get('https://zgzpls.firebaseio.com/tram/stations/tram-{}.json'.format(number)).text)
+
+    except:
+        backup = None
 
     if 'error' in data or not 'title' in data:
         return None
@@ -329,8 +347,10 @@ def get_tram(number:int=None, street=None):
         'transports': output['transports'],
         'lastUpdated': output['lastUpdated'],
     }
+
     if output['lines']:
         data['lines'] = output['lines']
+
     requests.patch('https://zgzpls.firebaseio.com/tram/stations/tram-{}.json'.format(number), json = data)
 
     return output
