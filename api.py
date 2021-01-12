@@ -9,8 +9,3 @@ app.http.add_middleware(hug.middleware.CORSMiddleware(app, max_age=7))
 @hug.extend_api('/zgzpls')
 def zgzpls_api():
     return [zgzpls]
-
-
-@hug.extend_api('/riotpls')
-def riotpls_api():
-    return [riotpls]
