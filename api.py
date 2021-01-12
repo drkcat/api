@@ -1,7 +1,7 @@
 import hug
 from falcon import HTTP_400
+
 from endpoints import zgzpls
-from endpoints import riotpls
 
 app = hug.API(__name__)
 app.http.add_middleware(hug.middleware.CORSMiddleware(app, max_age=7))
