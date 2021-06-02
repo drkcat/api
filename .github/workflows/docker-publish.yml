@@ -89,7 +89,7 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
           script: |
-            docker pull ghcr.io/${{ github.repository_owner }}/api:latest
-            docker stop api
-            docker rm api
-            docker run -v /var/run/app/:/var/run/app/ -ti -d --restart unless-stopped --name api ghcr.io/${{ github.repository_owner }}/api
+            docker pull ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+            docker stop ${{ env.IMAGE_NAME }}
+            docker rm ${{ env.IMAGE_NAME }}
+            docker run -v /var/run/app/:/var/run/app/ -ti -d --restart unless-stopped --name ${{ env.IMAGE_NAME }} ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
